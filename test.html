@@ -1,59 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <body>
-    <canvas id="canvas" width="150" height="150" style="float:left"></canvas>
+    <canvas id="canvas" width="1000" height="1000" style="float:left"></canvas>
     <script type="text/javascript">
-        var canvas = document.getElementById('canvas');
         var ctx = canvas.getContext('2d');
         var myImageData = ctx.createImageData(canvas.width, canvas.height);
-        var gradientArray,valueArray;
-        initPerlin([100, 20, 20]);
-        setInterval("interval()",10);
-        var add = 0.01, p = 0;
-        function interval() {
+        var gradientArray, valueArray;
+        perlinTest();
+        function perlinTest() {
+            initPerlin([100, 100]);
             var myImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            for (var i = 0; i < canvas.height; i++)
-                for (var j = 0; j < canvas.width; j++) {
-                    var color = perlinNoise([p, i / 100, j / 100]);
-                    color = (color - Math.floor(color)) * 255;
-                    for (var k = 0; k < 3; k++) myImageData.data[i * canvas.width * 4 + j * 4 + k] = color;
-                    myImageData.data[i * canvas.width * 4 + j * 4 + 3] = 255;
+            for (var i = 0; i < canvas.width; i++)
+                for (var j = 0; j < canvas.height; j++) {
+                    //var color = (fractal( 4,[i / 200, j / 200]) + 1) / 2 * 255;
+                    var color = perlinNoise([i / 200, j / 200]);
+                    color = color*5 - Math.floor(color*5);
+                    color = color * 255;
+                    for (var k = 0; k < 4; k++) myImageData.data[i * canvas.height * 4 + j * 4 + k] = (k == 3 ? 255 : color);
                 }
             ctx.putImageData(myImageData, 0, 0);
-            p = p + add;
-            if (p >= 100) p = 0;
         }
-        function pointCopy(point)
-        {
+        function pointCopy(point) {
             var newPoint = new Array();
             for (var i = 0; i < point.length; i++) newPoint[i] = point[i];
             return newPoint;
         }
         function getValue(point, array) {
-            return (function _getValue(dimension, point, array) {
-                if (dimension == point.length) return array;
-                return _getValue(dimension + 1, point, array[point[dimension]]);
-            }(0, point, array));
+            return function _getValue(dimension, point, array) {
+                return dimension == point.length ? array : _getValue(dimension + 1, point, array[point[dimension] % array.length]);
+            }(0, point, array);
         }
         function initArray(size) {
-            return (function _initArray(dimension, size) {
+            return function _initArray(dimension, size) {
                 if (dimension == size.length) return Math.random();
                 var array = new Array();
                 for (var i = 0; i < size[dimension]; i++) array[i] = _initArray(dimension + 1, size);
                 return array;
-            }(0, size));
+            }(0, size);
         }
-        function initGradient(size)
-        {
-            var gradient_size = size.concat([size.length]);
+        function initGradient(size) {
+            var gradient_size = pointCopy(size);
+            gradient_size[size.length] = size.length;
             var array = initArray(gradient_size);
-            (function format(dimension, array, size) {
+            (function format(dimension, array) {
                 if (dimension == size.length) {
                     for (var i = 0; i < size.length; i++) array[i] = array[i] * 2 - 1;
                     normalize(array);
                 }
-                else for (var i = 0; i < size[dimension]; i++) format(dimension + 1, array[i], size);
-            }(0, array, size));
+                else for (var i = 0; i < size[dimension]; i++) format(dimension + 1, array[i]);
+            })(0, array);
             return array;
         }
         function initPerlin(size) {
@@ -62,6 +57,16 @@
         }
         function s_curve(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
         function lerp(t, a, b) { return a + t * (b - a); }
+        function fractal(step, point) {
+            var newPoint = pointCopy(point);
+            var accumulate = point[0];
+            for (var j = 0; j < step; j++) {
+                var perlin = perlinNoise(newPoint);
+                accumulate = accumulate + Math.abs(perlin) / Math.pow(2, j);
+                for (var i = 0; i < point.length; i++) newPoint[i] = 2 * newPoint[i];
+            }
+            return Math.sin(accumulate*Math.PI/2);
+        }
         function normalize(vector) {
             var s = 0;
             for (var i = 0; i < vector.length; i++) s += vector[i] * vector[i];
@@ -77,21 +82,22 @@
                 ceil[i] = Math.ceil(point[i]);
                 s_curve_value[i] = s_curve(point[i] - floor[i]);
             }
-            return (function dimensionLerp(dimension, point) {
-                var pointFloor = pointCopy(point);
+            return function dimensionLerp(dimension, pointCorner) {
+                var pointFloor = pointCopy(pointCorner);
                 pointFloor[dimension - 1] = floor[dimension - 1];
-                var pointCeil = pointCopy(point);
+                var pointCeil = pointCopy(pointCorner);
                 pointCeil[dimension - 1] = ceil[dimension - 1];
                 if (dimension == 1) {
                     var gradientFloor = getValue(pointFloor, gradientArray);
                     var gradientCeil = getValue(pointCeil, gradientArray);
-                    var u = getValue(pointFloor, valueArray), v = getValue(pointCeil, valueArray);
-                    for (var i = 0; i < point.length; i++) u = u + pointFloor[i] * gradientFloor[i];
-                    for (var i = 0; i < point.length; i++) v = v + pointCeil[i] * gradientCeil[i];
+                    var u = getValue(pointFloor,valueArray)*2-1;
+                    var v = getValue(pointCeil, valueArray)*2-1;
+                    for (var i = 0; i < point.length; i++) u = u + (point[i] - pointFloor[i]) * gradientFloor[i]*2;
+                    for (var i = 0; i < point.length; i++) v = v + (point[i] - pointCeil[i]) * gradientCeil[i]*2;
                     return lerp(s_curve_value[0], u, v);
                 }
                 return lerp(s_curve_value[dimension - 1], dimensionLerp(dimension - 1, pointFloor), dimensionLerp(dimension - 1, pointCeil));
-            }(point.length, point));
+            }(point.length, point);
         }
     </script>
 </body>
