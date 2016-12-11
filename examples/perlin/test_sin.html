@@ -58,8 +58,7 @@
             var newPoint = pointCopy(point);
             var accumulate = point[0];
             for (var j = 0; j < step; j++) {
-                var perlin = perlinNoise(newPoint);
-                accumulate = accumulate + Math.abs(perlin) / Math.pow(2, j);
+                accumulate = accumulate + Math.abs(perlinNoise(newPoint)) / Math.pow(2, j);
                 for (var i = 0; i < point.length; i++) newPoint[i] = 2 * newPoint[i];
             }
             return Math.sin(accumulate*Math.PI/2);
