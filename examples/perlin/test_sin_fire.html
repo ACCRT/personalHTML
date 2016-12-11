@@ -12,7 +12,6 @@
         img.onload = function () {
             ctx2.drawImage(img, 0, 0);
             myImageData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
-            console.warn(myImageData2.data);
             perlinTest();
         };
         var ctx = canvas.getContext('2d');
@@ -24,7 +23,7 @@
             for (var i = 0; i < canvas.width; i++)
                 for (var j = 0; j < canvas.height; j++) {
                     var color = (fractal(4, [i / 200, j / 200]) + 1) / 2;
-                    for (var k = 0; k < 4; k++) myImageData.data[i * canvas.height * 4 + j * 4 + k] = (k == 3 ? 255 : myImageData2.data[Math.floor(color * canvas2.width) * canvas2.height * 4 + k]);
+                    for (var k = 0; k < 4; k++) myImageData.data[i * canvas.height * 4 + j * 4 + k] = (k == 3 ? 255 : myImageData2.data[Math.floor(color * canvas2.width) * 4 + k]);
                 }
             ctx.putImageData(myImageData, 0, 0);
         }
