@@ -8,9 +8,9 @@
         img.src = '../../assets/img/perlinNoise/gradient_fire.png';
         var canvas2 = document.getElementById('canvas2');
         var ctx2 = canvas.getContext('2d');
+        var myImageData2;
         img.onload = function () {
-            ctx2.drawImage(img, 0, 0);
-            var myImageData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+            myImageData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
             perlinTest();
         };
         var ctx = canvas.getContext('2d');
