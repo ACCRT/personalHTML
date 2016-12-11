@@ -11,6 +11,7 @@
         var myImageData2;
         img.onload = function () {
             myImageData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+            console.warn(myImageData2.data);
             perlinTest();
         };
         var ctx = canvas.getContext('2d');
