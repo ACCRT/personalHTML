@@ -21,7 +21,8 @@
             var myImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             for (var i = 0; i < canvas.width; i++)
                 for (var j = 0; j < canvas.height; j++) {
-                    var color = (fractal( 4,[i / 200, j / 200]) + 1) / 2 * 255;
+                    var color = (fractal(4, [i / 200, j / 200]) + 1) / 2 * 255;
+                    color = myImageData2.data[i * canvas2.height * 4];
                     for (var k = 0; k < 4; k++) myImageData.data[i * canvas.height * 4 + j * 4 + k] = (k == 3 ? 255 : color);
                 }
             ctx.putImageData(myImageData, 0, 0);
